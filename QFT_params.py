@@ -1,15 +1,8 @@
-width_error = 0.02 / 3
-use_uniform_coupler = False
+width_error = 0.02/3
 
-H_GATE_OPTIMIZED_PARAMS = [0.43, 0.452, 35.145, 0.422, 0.325, 16.761, 0.43, 0.452, 35.164]
-H_GATE_NAIVE_PARAMS = [0.460, 0.426, 29.276]
+Hadamard_params = {}
+Hadamard_params["uniform"] = [0.46, 0.426, 29.276]
+Hadamard_params["segmented"] = [0.429, 0.450, 35.84, 0.450, 0.350, 16.777, 0.429, 0.450, 35.771]
 
-X_TWO_THIRD_OPTIMIZED_PARAMS = [0.351, 0.46, 10.234, 0.459, 0.34, 17.039, 0.349, 0.46, 10.1305]
-X_TWO_THIRD_NAIVE_PARAMS = [0.450, 0.450, 17.639]
+coupler_type = "uniform"
 
-if use_uniform_coupler:
-    H_GATE_PARAMS = H_GATE_NAIVE_PARAMS
-    X_TWO_THIRD_PARAMS = X_TWO_THIRD_NAIVE_PARAMS
-else:
-    H_GATE_PARAMS = H_GATE_OPTIMIZED_PARAMS
-    X_TWO_THIRD_PARAMS = X_TWO_THIRD_OPTIMIZED_PARAMS

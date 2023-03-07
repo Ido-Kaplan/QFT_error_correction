@@ -25,6 +25,7 @@ if __name__ == "__main__":
 
     qc = QuantumCircuit(2)
 
+
     # initialize to state QFT_inverse|00>
     qc.h(1)
     qc.cp(-np.pi/2,0,1)
@@ -33,25 +34,25 @@ if __name__ == "__main__":
     qc.barrier()
 
     # perform hadamard on first qubit
-    perform_h_gate(qc, 0, width_error, use_uniform_coupler)
+    multiple_segment_operation(qc,0,Hadamard_params[coupler_type],dw=width_error)
 
     # perform R2 on second qubit
     qc.cp(np.pi / 2, 0, 1)
 
     # perform hadamard on second qubit
-    perform_h_gate(qc, 1, width_error, use_uniform_coupler)
+    multiple_segment_operation(qc,1,Hadamard_params[coupler_type],dw=width_error)
 
 
     qc.measure_all()
 
 
     qasm_simulator = Aer.get_backend('qasm_simulator')
-    shots = 10000
+    shots = 100000
     results = execute(qc, backend=qasm_simulator, shots=shots).result()
     answer = results.get_counts()
     answer_only_qbits = measure_only_qbits(answer,start1=0,end1=2,start2=2,end2=3)
     print(answer_only_qbits)
     plot_histogram(answer)
-    # qc.draw(output ='mpl', filename ='circuit_visualizaion\circuit_drawing.png')
+    qc.draw(output ='mpl', filename ='circuit_visualizaion\circuit_drawing.png')
 
     plt.show()

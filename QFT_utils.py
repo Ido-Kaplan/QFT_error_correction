@@ -1,6 +1,9 @@
 import numpy as np
 
 
+eta_c = np.array(0.0528)
+Uc_mat = np.sqrt(1-eta_c) * np.eye(2) - 1j * np.sqrt(eta_c) * np.array([[0,1],[1,0]])
+
 # this function emulates the coupling affecting the photons before/after propagating through the directional coupler
 def Uc(qc, qubit):
     qc.rx(0.4637, qubit)
@@ -25,41 +28,27 @@ def derive_coupling_from_width(parameters, index, error_w1=0.0, error_w2=0.0):
 
 
 # this function emulates a single segment operation on input qubit 
-def single_segment_operation(qc, qubit, w0, w1, t, cbit=0, dw=0.0, cond=False):
+def single_segment_operation(qc, qubit, w0, w1, t, cbit=0, dw=0.0, conditional_operation=False):
     delta = derive_detuning_from_width([w0, w1], 0, error_w1=dw, error_w2=dw)
     omega = derive_coupling_from_width([w0, w1], 0, error_w1=dw, error_w2=dw)
 
-    theta_1 = 2 * t * (((delta) ** 2 + omega ** 2) ** 0.5)
-    phi_1 = np.arctan((delta) / omega)
-
+    vx = omega * 2*t
     vy = 0
-    vx = np.cos(phi_1) * (theta_1)
-    vz = -np.sin(phi_1) * (theta_1)
-    if cond:
+    vz = delta * t *2
+
+    if conditional_operation:
         qc.rv(vx, vy, vz, qubit).c_if(cbit, 1)
     else:
         qc.rv(vx, vy, vz, qubit)
 
 
 # this function emulates multiple segments operation on input qubit
-def multiple_segment_operation(qc, qubit, params, dw=0.0, cbit=0, cond=False):
+def multiple_segment_operation(qc, qubit, params, dw=0.0, cbit=0, conditional_operation=False):
     Uc(qc, qubit)
-    single_segment_operation(qc, qubit, params[0], params[1], params[2], dw=dw, cbit=cbit, cond=cond)
+    single_segment_operation(qc, qubit, params[0], params[1], params[2], dw=dw, cbit=cbit,
+                             conditional_operation=conditional_operation)
     for i in range(3, len(params), 3):
-        single_segment_operation(qc, qubit, params[i], params[i + 1], params[i + 2], dw=dw, cbit=cbit, cond=cond)
+        single_segment_operation(qc, qubit, params[i], params[i + 1], params[i + 2], dw=dw, cbit=cbit,
+                                 conditional_operation=conditional_operation)
     Uc(qc, qubit)
 
-
-def perform_x_gate(qc, qubit, dw, naive):
-    if naive:
-        multiple_segment_operation(qc, qubit, [0.45, 0.45, 39.72], dw=dw)
-    else:
-        multiple_segment_operation(qc, qubit, [0.371, 0.420, 25.17, 0.427, 0.361, 26.725, 0.391, 0.450, 23.755], dw=dw)
-
-
-def perform_h_gate(qc, qubit, dw, naive):
-    qc.z(qubit)
-    if naive:
-        multiple_segment_operation(qc, qubit, [0.46, 0.426, 29.276], dw=dw)
-    else:
-        multiple_segment_operation(qc, qubit, [0.429, 0.450, 35.84, 0.450, 0.350, 16.777, 0.429, 0.450, 35.771], dw=dw)
