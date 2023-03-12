@@ -3,56 +3,39 @@ from QFT_params import *
 from QFT_utils import *
 
 # importing Qiskit
-from qiskit import Aer, QuantumCircuit, execute, assemble
+from qiskit import Aer, execute
 
 # import basic plot tools
-from qiskit.visualization import plot_histogram, plot_bloch_multivector
-
-
-sim = Aer.get_backend('qasm_simulator')
-
-def measure_only_qbits(dic,start1,end1,start2,end2):
-    ret_dic = {}
-    for key,value in dic.items():
-        new_key = key[start1:end1]+key[start2:end2]
-        ret_dic[new_key] = ret_dic.get(new_key,0) + value
-    return ret_dic
-
-
+from qiskit.visualization import plot_histogram
 
 
 if __name__ == "__main__":
 
-    qc = QuantumCircuit(2)
+    qc = QuantumCircuit(NUMBER_OF_QUBITS)
+
+    # initialize
+    qc.append(QFT_initialize(NUMBER_OF_QUBITS, "initialize\nstates"),range(NUMBER_OF_QUBITS))
 
 
-    # initialize to state QFT_inverse|00>
-    qc.h(1)
-    qc.cp(-np.pi/2,0,1)
-    qc.h(0)
+    # N qubits QFT
+    for i in range(NUMBER_OF_QUBITS):
+        for j in range(i, NUMBER_OF_QUBITS):
+            if i == j:
+                multiple_segment_operation(qc, i, Hadamard_params[coupler_type], dw=width_error)
+            else:
+                qc.cp(np.pi / (2 ** (j - i)), i, j)
 
-    qc.barrier()
-
-    # perform hadamard on first qubit
-    multiple_segment_operation(qc,0,Hadamard_params[coupler_type],dw=width_error)
-
-    # perform R2 on second qubit
-    qc.cp(np.pi / 2, 0, 1)
-
-    # perform hadamard on second qubit
-    multiple_segment_operation(qc,1,Hadamard_params[coupler_type],dw=width_error)
-
+        if i!=NUMBER_OF_QUBITS-1:
+            qc.barrier()
 
     qc.measure_all()
-
 
     qasm_simulator = Aer.get_backend('qasm_simulator')
     shots = 100000
     results = execute(qc, backend=qasm_simulator, shots=shots).result()
     answer = results.get_counts()
-    answer_only_qbits = measure_only_qbits(answer,start1=0,end1=2,start2=2,end2=3)
-    print(answer_only_qbits)
+    print("output results:",sorted(answer.items(), key=lambda x:x[1], reverse=True))
     plot_histogram(answer)
-    qc.draw(output ='mpl', filename ='circuit_visualizaion\circuit_drawing.png')
+    qc.draw(output='mpl', filename='circuit_visualizaion\circuit_drawing.png', style=font_sizes, scale = 0.8)
 
     plt.show()
